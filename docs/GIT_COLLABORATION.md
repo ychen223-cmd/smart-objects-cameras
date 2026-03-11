@@ -1,5 +1,7 @@
 # GitHub Collaboration Strategies
 
+> **Prefer slides?** View the [Git Collaboration Slides](git-collaboration-slides.html) for a visual walkthrough.
+
 Quick reference for managing student contributions to the smart objects camera template.
 
 ---

@@ -1,5 +1,7 @@
 # OAK-D + Raspberry Pi 5 — Quick Start Cheat Sheet
 
+> **Prefer slides?** View the [Cheat Sheet Slides](cheatsheet-slides.html) for a visual walkthrough.
+
 ## 🔌 Network Info
 
 | Camera  | Hostname  | SSH Command    | Access             |

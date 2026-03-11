@@ -1,5 +1,7 @@
 # Student Quick Start Guide
 
+> **Prefer slides?** [View the slide version](student-quickstart-slides.html)
+
 ## 🎯 Quick Start Checklist
 
 Follow these steps in order. Check them off as you complete them!

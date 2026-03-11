@@ -1,5 +1,7 @@
 # Development Workflow - Smart Objects Cameras
 
+> **Prefer slides?** View the [Workflow Slides](workflow-slides.html) for a visual walkthrough.
+
 ## Overview
 
 **GitHub repo lives on your LOCAL computer. Copy files to Pi as needed.**
