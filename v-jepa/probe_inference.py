@@ -27,7 +27,15 @@ import requests
 import torch
 import torch.nn as nn
 
-STATUS_FILE = Path.home() / "oak-projects" / "probe_status.json"
+OAK_PROJECTS = Path.home() / "oak-projects"
+
+def get_status_file(camera_name: str) -> Path:
+    """Per-camera status file for multi-camera setups."""
+    return OAK_PROJECTS / f"probe_status_{camera_name}.json"
+
+def get_history_file(camera_name: str) -> Path:
+    """Append-only history for analysis."""
+    return OAK_PROJECTS / f"probe_history_{camera_name}.jsonl"
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 log = logging.getLogger("probe-inference")
@@ -102,7 +110,7 @@ def main():
     import depthai as dai, tempfile
 
     CAMERA_W, CAMERA_H = 640, 480
-    FPS = 15
+    FPS = 30  # Match clip_recorder.py
     num_frames = int(args.clip_secs * FPS)
 
     env_file = Path.home() / "oak-projects" / ".env"
@@ -120,13 +128,25 @@ def main():
             cam.setFps(FPS)
             q = cam.preview.createOutputQueue(maxSize=FPS * 5, blocking=False)
             pipeline.start()
-            log.info("Camera started")
+            log.info("Pipeline started, warming up camera...")
+
+            # Warmup: wait for camera to start producing frames
+            warmup_start = time.time()
+            while time.time() - warmup_start < 2.0:
+                if q.tryGet() is not None:
+                    log.info("Camera ready")
+                    break
+                time.sleep(0.1)
+            else:
+                log.warning("Camera warmup timeout - continuing anyway")
 
             last_class = None
             loop = 0
 
             while True:
                 loop += 1
+                log.info(f"[{loop:04d}] Capturing {num_frames} frames...")
+
                 # Capture clip
                 tmp = tempfile.NamedTemporaryFile(suffix=".mp4", delete=False)
                 tmp.close()
@@ -142,6 +162,12 @@ def main():
                     else:
                         time.sleep(0.005)
                 writer.release()
+                log.info(f"[{loop:04d}] Captured {collected} frames")
+
+                if collected == 0:
+                    log.error("No frames captured! Camera issue?")
+                    time.sleep(args.interval)
+                    continue
 
                 # Classify
                 try:
@@ -157,8 +183,12 @@ def main():
                         "confidence": conf,
                         "class_probs": result["class_probs"],
                     }
-                    STATUS_FILE.parent.mkdir(parents=True, exist_ok=True)
-                    STATUS_FILE.write_text(json.dumps(status, indent=2))
+                    OAK_PROJECTS.mkdir(parents=True, exist_ok=True)
+                    get_status_file(camera_id).write_text(json.dumps(status, indent=2))
+
+                    # Append to history
+                    with open(get_history_file(camera_id), "a") as f:
+                        f.write(json.dumps(status) + "\n")
 
                     # Discord on class change
                     if args.discord and webhook_url and pred != last_class:
