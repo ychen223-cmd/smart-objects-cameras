@@ -87,6 +87,7 @@ def extract_embeddings(
     clips_dir: Path,
     server_url: str,
     cache_path: Path,
+    classes: list = None,
 ):
     """
     Walk clips_dir, embed every clip, return (X, y, class_names).
@@ -98,11 +99,19 @@ def extract_embeddings(
             cache = pickle.load(f)
         return cache["X"], cache["y"], cache["class_names"]
 
-    class_dirs = sorted([d for d in clips_dir.iterdir() if d.is_dir() and d.name != "unlabeled"])
-    if not class_dirs:
-        raise ValueError(f"No subdirectories found in {clips_dir}")
-
-    class_names = [d.name for d in class_dirs]
+    if classes:
+        # Use provided classes list - only include dirs that exist
+        existing = [c for c in classes if (clips_dir / c).is_dir()]
+        if not existing:
+            raise ValueError(f"None of the specified classes found in {clips_dir}: {classes}")
+        class_names = existing
+        class_dirs = [clips_dir / c for c in existing]
+    else:
+        # Auto-discover from subdirectories
+        class_dirs = sorted([d for d in clips_dir.iterdir() if d.is_dir() and d.name != "unlabeled"])
+        if not class_dirs:
+            raise ValueError(f"No subdirectories found in {clips_dir}")
+        class_names = [d.name for d in class_dirs]
     log.info(f"Classes: {class_names}")
 
     X, y = [], []
@@ -228,6 +237,8 @@ def main():
     parser.add_argument("--lr", type=float, default=1e-3)
     parser.add_argument("--no-cache", action="store_true",
                        help="Re-embed even if cache exists")
+    parser.add_argument("--classes", type=str, default=None,
+                       help="Comma-separated class names (e.g. empty_room,lecture,group_work)")
     args = parser.parse_args()
 
     # Validate clips directory
@@ -251,8 +262,11 @@ def main():
         log.error("Start server.py first.")
         return
 
+    # Parse classes if provided
+    classes = args.classes.split(",") if args.classes else None
+
     # Extract embeddings
-    X, y, class_names = extract_embeddings(args.clips_dir, args.server, cache_path)
+    X, y, class_names = extract_embeddings(args.clips_dir, args.server, cache_path, classes)
 
     if len(X) < 6:
         log.error(f"Not enough clips! Got {len(X)}, need at least 6 (2 per class minimum)")

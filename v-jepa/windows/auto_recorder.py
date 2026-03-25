@@ -159,7 +159,8 @@ def main():
                             cv2.putText(img, f"Clip {clip_count}: {ts}",
                                        (10, 30), cv2.FONT_HERSHEY_SIMPLEX,
                                        0.6, (0, 255, 0), 2)
-                            cv2.imshow("Auto Recorder", img)
+                            window_name = f"Auto Recorder - {args.ip}" if args.ip else "Auto Recorder - USB"
+                            cv2.imshow(window_name, img)
                             if cv2.waitKey(1) & 0xFF == ord('q'):
                                 break
 

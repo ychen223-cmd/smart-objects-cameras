@@ -8,11 +8,16 @@ Offload heavy model processing (skeleton, hands, depth) to a PC GPU instead of r
 
 ## Setup
 
+### Prerequisites
+
+- **Python 3.10** recommended (tested with `py -3.10`)
+- NVIDIA GPU with CUDA support (for GPU-accelerated scripts)
+
 ### 1. Install Dependencies
 
 ```bash
-# From this directory
-pip install -r requirements-windows.txt
+# From this directory (using Python 3.10)
+py -3.10 -m pip install -r requirements-windows.txt
 
 # For GPU-accelerated skeleton/hands (optional)
 pip install torch torchvision --index-url https://download.pytorch.org/whl/cu124
