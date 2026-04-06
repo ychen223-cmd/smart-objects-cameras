@@ -40,6 +40,11 @@ pc-testing/*.pt
 pc-testing/.cache/
 pc-testing/.depthai_cached_models/
 
+# Webcam testing artifacts
+webcam/*.pt
+webcam/__pycache__/
+webcam/.models/
+
 # Claude Code local settings (user-specific)
 .claude/settings.local.json
 
